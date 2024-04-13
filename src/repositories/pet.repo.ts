@@ -1,0 +1,81 @@
+import createDebug from 'debug';
+import { type Pet } from '../entities/pet';
+const debug = createDebug('W6E:repository:user');
+import fs from 'fs';
+
+export class PetRepository {
+  pets: Pet[] = [];
+  constructor() {
+    this.loadFromFile();
+  }
+
+  private loadFromFile() {
+    try {
+      const data = fs.readFileSync('db.json', { encoding: 'utf-8' });
+      debug('File data:', data);
+
+      const jsonData = JSON.parse(data);
+      debug('Parsed JSON data:', jsonData);
+
+      if (jsonData && Array.isArray(jsonData)) {
+        this.pets = jsonData;
+      }
+    } catch (error) {
+      debug('Error reading data from file:', error);
+      this.pets = [];
+    }
+  }
+
+  saveToFile() {
+    try {
+      fs.writeFileSync('db.json', JSON.stringify(this.pets, null, 2), {
+        encoding: 'utf-8',
+      });
+    } catch (error) {
+      debug('Error saving data to file:', error);
+    }
+  }
+
+  readAll() {
+    return this.pets;
+  }
+
+  readById(id: string) {
+    return this.pets.find((item) => item.id === id);
+  }
+
+  create(data: Pet) {
+    const newUser: Pet = {
+      id: (this.pets.length + 1).toString(),
+      name: data.name,
+      owner: data.owner,
+      species: data.species,
+      isAdopted: data.isAdopted,
+    };
+    this.pets = [...this.pets, newUser];
+    this.saveToFile();
+    return newUser;
+  }
+
+  update(inputId: string, data: Pet) {
+    const currentPet = this.pets.find((item) => item.id === inputId);
+    if (!currentPet) {
+      throw new Error(`User ${inputId} not found`);
+    }
+
+    const newPet = { ...currentPet, ...data };
+    this.pets = this.pets.map((item) => (item.id === inputId ? newPet : item));
+    this.saveToFile();
+    return newPet;
+  }
+
+  delete(inputId: string) {
+    const gonerPet = this.pets.find((item) => item.id === inputId);
+    if (!gonerPet) {
+      throw new Error(`User ${inputId} not found`);
+    }
+    this.pets = this.pets.filter((user) => user.id !== inputId);
+    this.saveToFile();
+    return gonerPet;
+  }
+}
