@@ -12,14 +12,9 @@ export class PetRepository {
   private loadFromFile() {
     try {
       const data = fs.readFileSync('db.json', { encoding: 'utf-8' });
-      debug('File data:', data);
 
-      const jsonData = JSON.parse(data);
-      debug('Parsed JSON data:', jsonData);
-
-      if (jsonData && Array.isArray(jsonData)) {
-        this.pets = jsonData;
-      }
+      const jsonData = JSON.parse(data) as Pet[];
+      this.pets = jsonData;
     } catch (error) {
       debug('Error reading data from file:', error);
       this.pets = [];
